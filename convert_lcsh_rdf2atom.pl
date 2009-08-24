@@ -28,7 +28,7 @@ my $count = 0;
 main();
 
 sub main {
-	#processRdf();
+	processRdf();
 	my $labels = getLabels();
 	findAndProcessAtoms($labels);
 }
