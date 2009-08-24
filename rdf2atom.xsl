@@ -30,13 +30,13 @@
 	<xsl:element name="author" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:element name="name" namespace="http://www.w3.org/2005/Atom">Library of Congress</xsl:element>
 	</xsl:element>
+	<xsl:apply-templates select="skos:prefLabel"/>
+	<xsl:apply-templates select="dcterms:created"/>
+	<xsl:apply-templates select="dcterms:modified"/>
 	<xsl:apply-templates select="skos:narrower"/>
 	<xsl:apply-templates select="skos:broader"/>
 	<xsl:apply-templates select="skos:related"/>
 	<xsl:apply-templates select="skos:inScheme"/>
-	<xsl:apply-templates select="skos:prefLabel"/>
-	<xsl:apply-templates select="dcterms:created"/>
-	<xsl:apply-templates select="dcterms:modified"/>
 	<xsl:apply-templates select="skos:altLabel"/>
 	<xsl:apply-templates select="skos:editorialNote"/>
 	<xsl:apply-templates select="skos:example"/>
@@ -115,6 +115,12 @@
 
   <xsl:template match="skos:prefLabel">
 	<xsl:element name="title" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:value-of select="."/>
+	</xsl:element>
+	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:attribute name="term">prefLabel</xsl:attribute>
+	  <xsl:attribute name="scheme">http://www.w3.org/2004/02/skos/core</xsl:attribute>
+	  <xsl:attribute name="label">preferred label</xsl:attribute>
 	  <xsl:value-of select="."/>
 	</xsl:element>
   </xsl:template>

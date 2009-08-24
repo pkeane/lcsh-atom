@@ -14,8 +14,8 @@ use feature qw/say/;
 
 ####### config settings 
 
-my $LCSH_RDF = 'lcsh_rdf.xml';
-my $ATOM_DIR = '/home/pkeane/lcsh';
+my $LCSH_RDF = '../lcsh_rdf.xml';
+my $ATOM_DIR = 'atoms';
 
 
 
@@ -41,25 +41,25 @@ sub processRdf {
 }
 
 sub processNode {
-	$reader = shift;
+	my $reader = shift;
 	if (
 		XML_READER_TYPE_ELEMENT == $reader->nodeType && 
 		1 == $reader->depth && 
 		'rdf:Description' eq $reader->name
 	) {
-		$node = $reader->copyCurrentNode(1);
+		my $node = $reader->copyCurrentNode(1);
 
 		my @parts = split('/',$reader->getAttribute('rdf:about'));
 		my @parts2 = split('#',pop @parts);
 		my $id = shift @parts2;
 		my $dir = substr md5_hex($id),0,2;
 		mkdir $ATOM_DIR.'/'.$dir;
-		my $path = 'lcsh/'.$dir.'/'.$id.'.atom';
+		my $path = $ATOM_DIR.'/'.$dir.'/'.$id.'.atom';
 		open FILE,'>',$path;
 		binmode FILE, ":utf8";
 
-		XML::LibXSLT->register_function("urn:perl", "term", sub { $str = shift; $str =~ s/([^#]*)#(.*)/$2/; return $str;});
-		XML::LibXSLT->register_function("urn:perl", "scheme", sub { $str = shift; $str =~ s/([^#]*)#(.*)/$1/; return $str;});
+		XML::LibXSLT->register_function("urn:perl", "term", sub { my $str = shift; $str =~ s/([^#]*)#(.*)/$2/; return $str;});
+		XML::LibXSLT->register_function("urn:perl", "scheme", sub { my $str = shift; $str =~ s/([^#]*)#(.*)/$1/; return $str;});
 
 		my $source = $parser->parse_string($node->toString(1));
 
@@ -71,7 +71,7 @@ sub processNode {
 }
 
 sub findAndProcessAtoms {
-	$labels = shift;
+	my $labels = shift;
 	find(
 		sub {
 			my $atom_path = $File::Find::name;
@@ -123,10 +123,10 @@ sub getLabels {
 			1 == $reader->depth && 
 			'rdf:Description' eq $reader->name
 		) {
-			$ident = $reader->getAttribute('rdf:about');
+			my $ident = $reader->getAttribute('rdf:about');
 			$reader->nextElement('prefLabel',"http://www.w3.org/2004/02/skos/core#");
 			$reader->read;
-			$label = $reader->value;
+			my $label = $reader->value;
 			$labels->{$ident} = $label;
 		}
 	}
