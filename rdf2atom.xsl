@@ -27,17 +27,41 @@
 	<xsl:element name="id" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:value-of select="@rdf:about"/>
 	</xsl:element>
-	  <xsl:apply-templates select="rdf:type[@rdf:resource='http://www.w3.org/2004/02/skos/core#Concept']" mode="main"/>
-	  <xsl:apply-templates select="skos:narrower"/>
-	  <xsl:apply-templates select="skos:broader"/>
-	  <xsl:apply-templates select="skos:related"/>
-	  <xsl:apply-templates select="skos:inScheme"/>
+	<xsl:element name="author" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:element name="name" namespace="http://www.w3.org/2005/Atom">Library of Congress</xsl:element>
+	</xsl:element>
+	<xsl:apply-templates select="skos:narrower"/>
+	<xsl:apply-templates select="skos:broader"/>
+	<xsl:apply-templates select="skos:related"/>
+	<xsl:apply-templates select="skos:inScheme"/>
+	<xsl:apply-templates select="skos:prefLabel"/>
+	<xsl:apply-templates select="dcterms:created"/>
+	<xsl:apply-templates select="dcterms:modified"/>
+	<xsl:apply-templates select="skos:altLabel"/>
+	<xsl:apply-templates select="skos:editorialNote"/>
+	<xsl:apply-templates select="skos:example"/>
+	<xsl:apply-templates select="skos:changeNote"/>
+	<xsl:apply-templates select="skos:scopeNote"/>
+	<xsl:apply-templates select="skos:closeMatch"/>
+	<xsl:apply-templates select="dcterms:source"/>
+	<xsl:element name="content" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:value-of select="skos:prefLabel"/>
+	</xsl:element>
   </xsl:template>
 
   <xsl:template match="skos:inScheme">
-	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
-	  <xsl:attribute name="term"><xsl:value-of select="perl:term(@rdf:resource)"/></xsl:attribute>
-	  <xsl:attribute name="scheme"><xsl:value-of select="perl:scheme(@rdf:resource)"/></xsl:attribute>
+	<xsl:element name="link" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:attribute name="href"><xsl:value-of select="@rdf:resource"/></xsl:attribute>
+	  <xsl:attribute name="rel">http://www.w3.org/2004/02/skos/core#inScheme</xsl:attribute>
+	  <xsl:attribute name="title"><xsl:value-of select="perl:term(@rdf:resource)"/></xsl:attribute>
+	</xsl:element>
+  </xsl:template>
+
+  <xsl:template match="skos:closeMatch">
+	<xsl:element name="link" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:attribute name="href"><xsl:value-of select="@rdf:resource"/></xsl:attribute>
+	  <xsl:attribute name="rel">http://www.w3.org/2004/02/skos/core#closeMatch</xsl:attribute>
+	  <xsl:attribute name="title"><xsl:value-of select="@rdf:resource"/></xsl:attribute>
 	</xsl:element>
   </xsl:template>
 
@@ -89,42 +113,25 @@
 	</xsl:element>
   </xsl:template>
 
-
-  <xsl:template match="rdf:type" mode="main">
-	<xsl:element name="author" namespace="http://www.w3.org/2005/Atom">
-	  <xsl:element name="name" namespace="http://www.w3.org/2005/Atom">Library of Congress</xsl:element>
-	</xsl:element>
-	<xsl:variable name="term" select="../skos:prefLabel"/>
-	<xsl:apply-templates select="../skos:prefLabel" mode="mainLabel"/>
-	<xsl:apply-templates select="../dcterms:created" mode="mainLabel"/>
-	<xsl:apply-templates select="../dcterms:modified" mode="mainLabel"/>
-	<xsl:apply-templates select="../skos:altLabel" mode="mainLabel"/>
-	<xsl:apply-templates select="../skos:editorialNote" mode="mainLabel"/>
-	<xsl:apply-templates select="../dcterms:source" mode="mainLabel"/>
-	<xsl:element name="content" namespace="http://www.w3.org/2005/Atom">
-	  <xsl:value-of select="$term"/>
-	</xsl:element>
-  </xsl:template>
-
-  <xsl:template match="skos:prefLabel" mode="mainLabel">
+  <xsl:template match="skos:prefLabel">
 	<xsl:element name="title" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:value-of select="."/>
 	</xsl:element>
   </xsl:template>
 
-  <xsl:template match="dcterms:modified" mode="mainLabel">
+  <xsl:template match="dcterms:modified">
 	<xsl:element name="updated" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:value-of select="."/>
 	</xsl:element>
   </xsl:template>
 
-  <xsl:template match="dcterms:created" mode="mainLabel">
+  <xsl:template match="dcterms:created">
 	<xsl:element name="published" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:value-of select="."/>
 	</xsl:element>
   </xsl:template>
 
-  <xsl:template match="dcterms:source" mode="mainLabel">
+  <xsl:template match="dcterms:source">
 	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:attribute name="term">source</xsl:attribute>
 	  <xsl:attribute name="scheme">http://purl.org/dc/terms/</xsl:attribute>
@@ -132,7 +139,7 @@
 	</xsl:element>
   </xsl:template>
 
-  <xsl:template match="skos:altLabel" mode="mainLabel">
+  <xsl:template match="skos:altLabel">
 	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:attribute name="term">altLabel</xsl:attribute>
 	  <xsl:attribute name="scheme">http://www.w3.org/2004/02/skos/core</xsl:attribute>
@@ -141,11 +148,38 @@
 	</xsl:element>
   </xsl:template>
 
-  <xsl:template match="skos:editorialNote" mode="mainLabel">
+  <xsl:template match="skos:editorialNote">
 	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
 	  <xsl:attribute name="term">editorialNote</xsl:attribute>
 	  <xsl:attribute name="scheme">http://www.w3.org/2004/02/skos/core</xsl:attribute>
 	  <xsl:attribute name="label">editorial note</xsl:attribute>
+	  <xsl:value-of select="."/>
+	</xsl:element>
+  </xsl:template>
+
+  <xsl:template match="skos:changeNote">
+	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:attribute name="term">changeNote</xsl:attribute>
+	  <xsl:attribute name="scheme">http://www.w3.org/2004/02/skos/core</xsl:attribute>
+	  <xsl:attribute name="label">change note</xsl:attribute>
+	  <xsl:value-of select="."/>
+	</xsl:element>
+  </xsl:template>
+
+  <xsl:template match="skos:scopeNote">
+	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:attribute name="term">scopeNote</xsl:attribute>
+	  <xsl:attribute name="scheme">http://www.w3.org/2004/02/skos/core</xsl:attribute>
+	  <xsl:attribute name="label">scope note</xsl:attribute>
+	  <xsl:value-of select="."/>
+	</xsl:element>
+  </xsl:template>
+
+  <xsl:template match="skos:example">
+	<xsl:element name="category" namespace="http://www.w3.org/2005/Atom">
+	  <xsl:attribute name="term">example</xsl:attribute>
+	  <xsl:attribute name="scheme">http://www.w3.org/2004/02/skos/core</xsl:attribute>
+	  <xsl:attribute name="label">example</xsl:attribute>
 	  <xsl:value-of select="."/>
 	</xsl:element>
   </xsl:template>
