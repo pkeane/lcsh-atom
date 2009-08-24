@@ -15,7 +15,7 @@ use feature qw/say/;
 ####### config settings 
 
 my $LCSH_RDF = '../lcsh_rdf.xml';
-my $ATOM_DIR = 'atoms';
+my $ATOM_DIR = '/home/pkeane/Downloads/lcsh-atom/atoms';
 
 
 
@@ -28,7 +28,7 @@ my $count = 0;
 main();
 
 sub main {
-	processRdf();
+	#processRdf();
 	my $labels = getLabels();
 	findAndProcessAtoms($labels);
 }
@@ -71,6 +71,7 @@ sub processNode {
 }
 
 sub findAndProcessAtoms {
+	$count = 0;
 	my $labels = shift;
 	find(
 		sub {
@@ -106,7 +107,7 @@ sub processAtom {
 			$node->setAttribute('title',$labels->{$href});
 		}
 	}
-	say 'processed '.$atom_path;
+	say 'processed '.$count.' ----- '.$atom_path;
 	open FILE,'>',$atom_path;
 	binmode FILE, ":utf8";
 	print FILE $doc->toString;
