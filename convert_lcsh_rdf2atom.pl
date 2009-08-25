@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Data::Dumper;
+use BerkeleyDB;
 use Digest::MD5 qw/md5_hex/;
 use File::Find;
 use XML::DOM;
@@ -16,8 +17,8 @@ use feature qw/say/;
 
 my $LCSH_RDF = '../lcsh_rdf.xml';
 my $ATOM_DIR = '/home/pkeane/Downloads/lcsh-atom/atoms';
-
-
+my $BDB = '/home/pkeane/Downloads/lcsh-atom/labels.dbm';
+my $LOG = '/home/pkeane/Downloads/lcsh-atom/processing.log';
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
@@ -28,9 +29,10 @@ my $count = 0;
 main();
 
 sub main {
-	processRdf();
-	my $labels = getLabels();
-	findAndProcessAtoms($labels);
+	#processRdf();
+	#my $labels = getLabels();
+	#findAndProcessAtoms($labels);
+	findAndProcessAtoms();
 }
 
 sub processRdf {
@@ -71,25 +73,35 @@ sub processNode {
 }
 
 sub findAndProcessAtoms {
+	my $db = BerkeleyDB::Hash->new( -Filename => $BDB)
+		or die "Cannot open file $BDB: $! $BerkeleyDB::Error\n" ;
 	$count = 0;
 	my $labels = shift;
 	find(
 		sub {
 			my $atom_path = $File::Find::name;
 			if ( !-d $atom_path ) {
-				processAtom($atom_path,$labels);
+				processAtom($atom_path,$db);
 			}
 		}, 
 		$ATOM_DIR );
 }
 
 sub processAtom {
+	open my $logfile, '>>', $LOG;
 	my $atom_path = shift;
 	my $labels = shift;
 
 	my $skos_broader =	'http://www.w3.org/2004/02/skos/core#broader';
 	my $skos_narrower = 'http://www.w3.org/2004/02/skos/core#narrower';
 	my $skos_related = 'http://www.w3.org/2004/02/skos/core#related';
+
+	say 'processing '.$count.' ----- '.$atom_path;
+
+	if (!-s $atom_path) {
+		print $logfile 'no such file'.$atom_path."\n";;
+		return;
+	}
 
 	my $parser = XML::DOM::Parser->new;
 	my $doc = $parser->parsefile($atom_path);
@@ -104,10 +116,13 @@ sub processAtom {
 			$skos_broader eq $rel ||
 			$skos_related eq $rel 
 		) {
-			$node->setAttribute('title',$labels->{$href});
+			#$node->setAttribute('title',$labels->{$href});
+			my $title;
+			$labels->db_get($href,$title);
+			$node->setAttribute('title',$title);
 		}
 	}
-	say 'processed '.$count.' ----- '.$atom_path;
+	$count++;
 	open FILE,'>',$atom_path;
 	binmode FILE, ":utf8";
 	print FILE $doc->toString;
@@ -115,7 +130,12 @@ sub processAtom {
 }
 
 sub getLabels {
-	my $labels = {};
+    my $db = BerkeleyDB::Hash->new( -Filename => $BDB, -Flags => DB_CREATE)
+		or die "Cannot open file $BDB: $! $BerkeleyDB::Error\n" ;
+
+	#binmode $db->_fh, ":utf8";
+	$count = 0;
+	#my $labels = {};
 	my $reader = new
 	XML::LibXML::Reader(location => $LCSH_RDF) or die "cannot read file.xml\n";
 	while ($reader->read) {
@@ -128,9 +148,12 @@ sub getLabels {
 			$reader->nextElement('prefLabel',"http://www.w3.org/2004/02/skos/core#");
 			$reader->read;
 			my $label = $reader->value;
-			$labels->{$ident} = $label;
+			#$labels->{$ident} = $label;
+			$db->db_put($ident,$label);
+
+			$count++;
+			print "label $count for $label\n";
 		}
 	}
-	return $labels;
+	return $db;
 }
-
